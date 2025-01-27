@@ -11,10 +11,7 @@
         "forceConsistentCasingInFileNames": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "strictPropertyInitialization": false,
-        "paths": {
-            "@/*": ["./src/*"]
-        }
+        "strictPropertyInitialization": false
     },
     "include": ["src/**/*.ts"],
     "exclude": ["node_modules"]
