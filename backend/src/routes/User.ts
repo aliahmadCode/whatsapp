@@ -3,6 +3,6 @@ import express, { Request, Response } from "express";
 
 export const userRouter = express.Router();
 
-userRouter.get("/add", addUser);
-userRouter.post("/edit:id", editUser);
+userRouter.post("/add", addUser);
+userRouter.patch("/edit:id", editUser);
 userRouter.delete("/delete:id", deleteUser);

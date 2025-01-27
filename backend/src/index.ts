@@ -17,12 +17,13 @@ app.get("/programmer", (req: Request, res: Response) => {
 
 app.use("/api/user/", userRouter);
 
-try {
-    app.listen(PORT, () => {
-        dbConnect();
-        console.log(`Listening on the port ${PORT}`);
+dbConnect()
+    .then(() => {
+        app.listen(PORT, () => {
+            console.log(`db connected\nListening on the port ${PORT}`);
+        });
+    })
+    .catch((err) => {
+        console.log(err);
+        process.exit(1);
     });
-} catch (err) {
-    console.error(err);
-    process.exit(1);
-}

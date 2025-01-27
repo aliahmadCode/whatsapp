@@ -1,10 +1,13 @@
 import { Request, Response } from "express";
+import { UserBeforeCreation } from "../interfaces/UserInterface.js";
 
+// adding user
 export const addUser = async (
-    req: Request,
-    res: Response<{ message: string }>,
+    req: Request<{}, {}, UserBeforeCreation, {}>,
+    res: Response,
 ): Promise<any> => {
-    console.log(req.body);
+    const { username, password, email, phone } = req.body;
+
     return res.status(200).json({
         message: "/add user",
     });
