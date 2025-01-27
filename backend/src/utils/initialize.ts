@@ -1,12 +1,5 @@
 import { DataSource } from "typeorm";
-
-export const AppDataSource = new DataSource({
-    type: "postgres",
-    host: process.env.DB_HOST,
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-});
+import { AppDataSource } from "../index.js";
 
 export const dbConnect = async () => {
     AppDataSource.initialize()
@@ -14,6 +7,7 @@ export const dbConnect = async () => {
             return;
         })
         .catch((err: Error) => {
+            console.log(err);
             throw new Error(err.message);
         });
 };

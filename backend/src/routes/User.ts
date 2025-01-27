@@ -1,8 +1,18 @@
-import { addUser, deleteUser, editUser } from "../controllers/User.js";
+import {
+    addUser,
+    deleteAllUser,
+    deleteUser,
+    editUser,
+    getAllUser,
+    getUser,
+} from "../controllers/User.js";
 import express, { Request, Response } from "express";
 
 export const userRouter = express.Router();
 
+userRouter.get("/get", getAllUser);
+userRouter.get("/get/:id", getUser);
 userRouter.post("/add", addUser);
-userRouter.patch("/edit:id", editUser);
-userRouter.delete("/delete:id", deleteUser);
+userRouter.patch("/edit/:id", editUser);
+userRouter.delete("/delete", deleteAllUser);
+userRouter.delete("/delete/:id", deleteUser);
