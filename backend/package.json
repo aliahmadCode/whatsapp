@@ -1,0 +1,25 @@
+{
+    "name": "backend",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "MIT",
+    "type": "module",
+    "scripts": {
+        "dev": "NODE_OPTIONS='--loader ts-node/esm' nodemon src/index.ts"
+    },
+    "devDependencies": {
+        "@types/express": "^5.0.0",
+        "@types/node": "^22.10.10",
+        "nodemon": "^3.1.9",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.7.3"
+    },
+    "dependencies": {
+        "dotenv": "^16.4.7",
+        "express": "^4.21.2",
+        "mongoose": "^8.9.5",
+        "pg": "^8.13.1",
+        "reflect-metadata": "^0.2.2",
+        "typeorm": "^0.3.20"
+    }
+}
