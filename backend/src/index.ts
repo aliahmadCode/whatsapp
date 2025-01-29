@@ -5,10 +5,14 @@ import { userRouter } from "./routes/User.js";
 import { DataSource } from "typeorm";
 import { User } from "./models/User.js";
 import { messageRouter } from "./routes/Message.js";
+import { Message } from "./models/Message.js";
 
 dotenv.config(); // environment variables
 
 export const PORT: string | number = process.env.PORT || 3000;
+export const SECRET_KEY: string = process.env.SECRET
+    ? process.env.SECRET
+    : process.exit(1);
 export const app = express();
 
 export const AppDataSource = new DataSource({
@@ -18,8 +22,10 @@ export const AppDataSource = new DataSource({
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    entities: [User],
+
+    entities: [User, Message],
     synchronize: true,
+
     logging: false,
 });
 
@@ -32,8 +38,8 @@ app.get("/programmer", (req: Request, res: Response) => {
     });
 });
 
-app.use("/api/user/", userRouter);
 app.use("/api/message/", messageRouter);
+app.use("/api/user/", userRouter);
 
 dbConnect()
     .then(() => {

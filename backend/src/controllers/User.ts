@@ -10,7 +10,9 @@ export const getAllUser = async (
 ): Promise<any> => {
     try {
         const userRepo = AppDataSource.getRepository(User);
-        const users = await userRepo.find();
+        const users = await userRepo.find({
+            relations: ["sendMessages", "receivedMessages"],
+        });
 
         if (users.length === 0) {
             return res.status(200).json({
@@ -42,22 +44,22 @@ export const getUser = async (
     try {
         const { id } = req.params;
         const userRepo = AppDataSource.getRepository(User);
-        const users = await userRepo.findBy({
-            id: id,
+        const user = await userRepo.findOne({
+            where: { id },
+            relations: ["sendMessages", "receivedMessages"],
         });
 
-        if (users.length === 0) {
-            return res.status(200).json({
-                message: "User Table Empty",
+        if (!user) {
+            return res.status(400).json({
+                message: "User not exists",
                 success: false,
-                data: users,
+                data: user,
             });
         }
-
         return res.status(200).json({
             message: "User Fetched Successfully",
             success: true,
-            data: users,
+            data: user,
         });
     } catch (error) {
         console.log(error);
@@ -91,18 +93,19 @@ export const addUser = async (
             });
         }
         const salt = await bcrypt.genSalt(10);
-        password = await bcrypt.hash(password, salt);
+        password = await bcrypt.hash(password as string, salt);
 
-        user.email = email;
-        user.password = password;
-        user.username = username;
-        user.phone = phone;
+        user.email = email as string;
+        user.password = password as string;
+        user.username = username as string;
+        user.phone = phone as string;
 
-        userRepo.save(user);
+        const resultUser = await userRepo.save(user);
 
         return res.status(200).json({
             message: "User created successfully",
             success: true,
+            data: resultUser,
         });
     } catch (error) {
         console.log(error);

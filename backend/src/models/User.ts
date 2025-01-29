@@ -6,6 +6,7 @@ import {
     CreateDateColumn,
     BaseEntity,
     OneToMany,
+    Relation,
 } from "typeorm";
 import { Message } from "./Message.js";
 
@@ -43,11 +44,13 @@ export class User {
     phone: string;
 
     @OneToMany(() => Message, (message) => message.sender)
-    sendMessages: Message[];
+    sendMessages: Relation<Message[]>;
 
     @OneToMany(() => Message, (message) => message.receiver)
-    receivedMessages: Message[];
+    receivedMessages: Relation<Message[]>;
 
+    @Column({ type: "text", nullable: true })
+    token: string;
 
     @UpdateDateColumn({ type: "timestamp" })
     updatedAt: Date;

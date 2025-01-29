@@ -6,23 +6,17 @@ import {
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
+    Relation,
     UpdateDateColumn,
 } from "typeorm";
 import { User } from "./User.js";
+
 import { MessageStatus, MessageType } from "../interfaces/MessageEnums.js";
 
 @Entity()
 export class Message {
     @PrimaryGeneratedColumn("uuid")
     id: string;
-
-    @ManyToOne(() => User, (user) => user.sendMessages)
-    @JoinColumn({ name: "sender_id" })
-    sender: User;
-
-    @ManyToOne(() => User, (user) => user.receivedMessages)
-    @JoinColumn({ name: "receiver_id" })
-    receiver: User;
 
     @Column("text")
     message: string;
@@ -40,6 +34,14 @@ export class Message {
         default: MessageStatus.SENT,
     })
     message_status: MessageStatus;
+
+    @ManyToOne(() => User, (user) => user.sendMessages)
+    @JoinColumn({ name: "sender_id" })
+    sender: Relation<User>;
+
+    @ManyToOne(() => User, (user) => user.receivedMessages)
+    @JoinColumn({ name: "receiver_id" })
+    receiver: Relation<User>;
 
     @UpdateDateColumn({ type: "timestamp" })
     updatedAt: Date;

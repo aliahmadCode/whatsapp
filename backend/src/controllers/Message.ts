@@ -4,17 +4,39 @@ import { User } from "../models/User.js";
 import { MessageStatus, MessageType } from "../interfaces/MessageEnums.js";
 import { Message } from "../models/Message.js";
 import { AppDataSource } from "../index.js";
+import { MessageStates } from "../interfaces/MessageInterface.js";
 
-export interface MessageStates {
-    id?: string;
-    message?: string;
-    sender?: User | string;
-    receiver?: User | string;
-    message_type?: MessageType;
-    message_status?: MessageStatus;
-    updatedAt?: Date;
-    createdAt?: Date;
-}
+export const getAllMessage = async (
+    req: Request,
+    res: Response<NormalResponse>,
+): Promise<any> => {
+    try {
+        const messageRepo = await AppDataSource.getRepository(Message);
+        const messages = await messageRepo.find({
+            relations: ["sender", "receiver"],
+        });
+
+        if (messages.length === 0) {
+            return res.status(400).json({
+                message: "Empty Messages",
+                success: false,
+                data: messages,
+            });
+        }
+
+        return res.status(400).json({
+            message: "Message fetched",
+            success: true,
+            data: messages,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "server error",
+            success: false,
+            error: error,
+        });
+    }
+};
 
 export const sendMesage = async (
     req: Request<{}, {}, MessageStates, {}>,
