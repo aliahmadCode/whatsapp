@@ -4,6 +4,7 @@ import { dbConnect } from "./utils/initialize.js";
 import { userRouter } from "./routes/User.js";
 import { DataSource } from "typeorm";
 import { User } from "./models/User.js";
+import { messageRouter } from "./routes/Message.js";
 
 dotenv.config(); // environment variables
 
@@ -32,6 +33,7 @@ app.get("/programmer", (req: Request, res: Response) => {
 });
 
 app.use("/api/user/", userRouter);
+app.use("/api/message/", messageRouter);
 
 dbConnect()
     .then(() => {

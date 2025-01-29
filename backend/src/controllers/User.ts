@@ -1,8 +1,5 @@
 import { Request, Response } from "express";
-import {
-    NormalResponse,
-    UserBeforeCreation,
-} from "../interfaces/UserInterface.js";
+import { NormalResponse, UserStates } from "../interfaces/UserInterface.js";
 import { User } from "../models/User.js";
 import { AppDataSource } from "../index.js";
 import bcrypt from "bcryptjs";
@@ -74,7 +71,7 @@ export const getUser = async (
 
 // adding user
 export const addUser = async (
-    req: Request<{}, {}, UserBeforeCreation, {}>,
+    req: Request<{}, {}, UserStates, {}>,
     res: Response<NormalResponse>,
 ): Promise<any> => {
     try {

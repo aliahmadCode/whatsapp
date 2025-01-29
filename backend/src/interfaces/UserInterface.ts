@@ -1,17 +1,11 @@
-export interface UserBeforeCreation {
+export interface UserStates {
+    id?: string;
     username: string;
     email: string;
     phone: string;
     password: string;
-}
-
-export interface UserAfterCreation extends UserBeforeCreation {
-    username: string;
-    email: string;
-    phone: string;
-    password: string;
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 export interface NormalResponse {
     message: string;

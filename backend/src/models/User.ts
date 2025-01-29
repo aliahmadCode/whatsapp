@@ -5,36 +5,53 @@ import {
     UpdateDateColumn,
     CreateDateColumn,
     BaseEntity,
+    OneToMany,
 } from "typeorm";
+import { Message } from "./Message.js";
 
 @Entity()
-export class User extends BaseEntity {
+export class User {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
     @Column({
-        type: "text",
+        type: "varchar",
+        length: 255,
         unique: true,
     })
     username: string;
 
     @Column({
-        type: "text",
+        type: "varchar",
+        length: 255,
+
         unique: true,
     })
     email: string;
 
     @Column({
-        type: "text",
+        type: "varchar",
+        length: 255,
     })
     password: string;
 
-    @Column("text")
+    @Column({
+        type: "varchar",
+        length: 255,
+        unique: true,
+    })
     phone: string;
 
-    @UpdateDateColumn()
+    @OneToMany(() => Message, (message) => message.sender)
+    sendMessages: Message[];
+
+    @OneToMany(() => Message, (message) => message.receiver)
+    receivedMessages: Message[];
+
+
+    @UpdateDateColumn({ type: "timestamp" })
     updatedAt: Date;
 
-    @CreateDateColumn()
+    @CreateDateColumn({ type: "timestamp" })
     createdAt: Date;
 }
