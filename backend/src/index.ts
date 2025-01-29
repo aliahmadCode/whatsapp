@@ -6,51 +6,68 @@ import { DataSource } from "typeorm";
 import { User } from "./models/User.js";
 import { messageRouter } from "./routes/Message.js";
 import { Message } from "./models/Message.js";
-
 dotenv.config(); // environment variables
+import { Server } from "socket.io";
+import { createServer } from "node:http";
+import cors from "cors";
+
+export const app = express();
+const server = createServer(app);
+
+export const io = new Server({
+  cors: {
+    methods: ["GET", "POST", "PATCH", "DELETE", "PUT"],
+    origin: "http://localhost:5173",
+  },
+});
 
 export const PORT: string | number = process.env.PORT || 3000;
 export const SECRET_KEY: string = process.env.SECRET
-    ? process.env.SECRET
-    : process.exit(1);
-export const app = express();
+  ? process.env.SECRET
+  : process.exit(1);
 
 export const AppDataSource = new DataSource({
-    type: "postgres",
-    host: process.env.DB_HOST,
-    port: 5432,
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
+  type: "postgres",
+  host: process.env.DB_HOST,
+  port: 5432,
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
 
-    entities: [User, Message],
-    synchronize: true,
+  entities: [User, Message],
+  synchronize: true,
 
-    logging: false,
+  logging: false,
 });
 
 app.use(express.json());
 
 app.get("/programmer", (req: Request, res: Response) => {
-    res.status(200).json({
-        name: "Ali Ahmad",
-        visual: "https://github.com/aliahmadCode/",
-    });
+  res.status(200).json({
+    name: "Ali Ahmad",
+    visual: "https://github.com/aliahmadCode/",
+  });
 });
 
 app.use("/api/message/", messageRouter);
 app.use("/api/user/", userRouter);
 
+io.on("connection", (socket) => {
+  socket.on("connect", (data: { senderid: string }) => {
+    socket.join(data.senderid);
+  });
+});
+
 dbConnect()
-    .then(() => {
-        app.listen(PORT, () => {
-            console.log(`db connected\nListening on the port ${PORT}`);
-        });
-    })
-    .catch((err) => {
-        console.log(err);
-        process.exit(1);
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log(`db connected\nListening on the port ${PORT}`);
     });
+  })
+  .catch((err) => {
+    console.log(err);
+    process.exit(1);
+  });
 
 /*
 
