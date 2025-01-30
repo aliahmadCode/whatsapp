@@ -49,6 +49,7 @@ export class SocketManager {
         socket.emit("isLogin", "Logged In");
       });
 
+      // socket handles message send
       socket.on("message_send", async (data: ISend) => {
         const { senderId, receiverId, message } = data;
         console.log("the send", data);
@@ -61,6 +62,7 @@ export class SocketManager {
         ).findOne({ where: { id: receiverId } });
 
         if (!sender || !receiver) {
+          // emiting errors
           return socket.emit("message_error", "Invalid Users");
         }
 
