@@ -20,7 +20,7 @@ const socket = new SocketManager();
 socket.io.attach(server);
 socket.initialize();
 
-const client = await createClient().on("error", (err) => {
+export const client = await createClient().on("error", (err) => {
   console.log("Can't connect to redis: ", err);
 });
 
@@ -71,7 +71,7 @@ client.connect().then(() => {
     .then(() => {
       server.listen(PORT, () => {
         console.log(
-          `redis connected\ndb connected\nListening on the port ${PORT}`,
+          `----------------------------------\nredis connected\ndb connected\nListening on the port ${PORT}\n----------------------------------`,
         );
       });
     })

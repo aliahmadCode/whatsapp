@@ -1,5 +1,5 @@
-import { Server, Socket } from "socket.io";
-import { AppDataSource } from "../index.js";
+import { DisconnectReason, Server, Socket } from "socket.io";
+import { AppDataSource, client } from "../index.js";
 import { Message } from "../models/Message.js";
 import { User } from "../models/User.js";
 import { MessageStatus, MessageType } from "../interfaces/MessageEnums.js";
@@ -12,8 +12,7 @@ import { MessageStatus, MessageType } from "../interfaces/MessageEnums.js";
 });
  */
 
-interface ILogin {
-  name?: string;
+interface ILoginDisconnect {
   userId: string;
 }
 
@@ -25,7 +24,6 @@ interface ISend {
 
 export class SocketManager {
   private _io: Server;
-  private _map: Map<string, ILogin>;
   constructor() {
     this._io = new Server({
       cors: {
@@ -33,84 +31,129 @@ export class SocketManager {
         origin: "http://localhost:3000",
       },
     });
-
-    this._map = new Map();
   }
 
   get io() {
     return this._io;
   }
+
+
+  /*
+   *
+   * sockets
+   *
+   * (on)
+   * message_login - data: ILoginDisconnect
+   * disconnect - reason: DisconnectReason, data: ILoginDisconnect
+   * message_send - data: ISend
+   *
+   * (emit)
+   * message_error - data: string
+   * message_receive - {status: string; message: string; createdAt: Date}
+   *
+   * redis
+   *
+   * (LIST)
+   * pending_messages: {id: string; message: string; status: MessageStatus; createdAt: Date}
+   *
+   * */
   initialize(): void {
     this._io.on("connection", (socket: Socket) => {
-      socket.on("message_login", (data: ILogin) => {
-        this._map.set(data.userId, {
-          userId: socket.id,
-        });
-        socket.emit("isLogin", "Logged In");
+      socket.on("message_login", async (data: ILoginDisconnect) => {
+        await client.set(data.userId, socket.id);
+        socket.to(socket.id).emit("isLogin", "Logged In");
       });
+
+      // it will send the userId
+      socket.on(
+        "disconnect",
+        async (reason: DisconnectReason, data: ILoginDisconnect) => {
+          try {
+            await client.del(data.userId);
+            console.log(reason);
+          } catch (err) {
+            console.error("Redis delete user connectiona: ", err);
+          }
+        },
+      );
 
       // socket handles message send
       socket.on("message_send", async (data: ISend) => {
+        // from payload of message send
         const { senderId, receiverId, message } = data;
-        console.log("the send", data);
+
+        // message repo
         const messageRepo = await AppDataSource.getRepository(Message);
+        // finding sender user
         const sender = await AppDataSource.getRepository(User).findOne({
           where: { id: senderId },
         });
+
+        // finding receiver user
         const receiver = await AppDataSource.getRepository(
           User,
         ).findOne({ where: { id: receiverId } });
 
+        // if any one is not registered
         if (!sender || !receiver) {
           // emiting errors
           return socket.emit("message_error", "Invalid Users");
         }
 
+        // msg object
         const msg = new Message();
         msg.sender = sender;
         msg.receiver = receiver;
         msg.message_type = MessageType.TEXT;
         msg.message = message;
 
-        const receiverSocketId: ILogin | undefined =
-          this._map.get(receiverId);
+        // the socket id
+        const receiverSocketId: string | null =
+          await client.get(receiverId);
 
-        if (receiverSocketId && receiverSocketId.userId) {
+        // found receiver in cache, means connected
+        if (receiverSocketId) {
           msg.message_status = MessageStatus.DELIVERED;
           const resultMessage: Message = await messageRepo.save(msg);
-          return this._io
-            .to(receiverSocketId.userId)
-            .emit("message_receive", {
-              userId: receiverId,
-              message,
-              senderId: senderId,
-              createdAt: resultMessage.createdAt,
-              status: resultMessage.message_status
-            });
-        }
-        msg.message_status = MessageStatus.SENT;
-        const resultMessage: Message = await messageRepo.save(msg);
-        // assuming that the sender is connected for now
-        return this._io.to(senderId).emit("message_receive", {
-          status: resultMessage.message_status,
-          message: resultMessage.message
-        })
-      });
 
-      socket.on("disconnect", () => {
-        this._map.forEach((val, key) => {
-          const id = socket.id;
-          if (val.userId === id) {
-            const isDeleted = this._map.delete(key);
-            if (isDeleted) {
-              console.log(`User with id: ${id} is disconnected`);
-            } else {
-              console.log(
-                `User with id: ${id} is disconnected, but somehow id is not deleted`,
-              );
-            }
-          }
-        });
+          // sending to receiver
+          this._io.to(receiverSocketId).emit("message_receive", {
+            message,
+            createdAt: resultMessage.createdAt,
+            status: resultMessage.message_status,
+          });
+
+          // assuming that the sender is connected for now, and it should be
+          // telling the sender about status, it is delivered
+          return this._io.to(senderId).emit("message_receive", {
+            status: resultMessage.message_status,
+            message: resultMessage.message,
+            createdAt: resultMessage.createdAt,
+          });
+        } else {
+          // receiver is not connected, just send
+          msg.message_status = MessageStatus.SENT;
+          const resultMessage: Message = await messageRepo.save(msg);
+
+          // message status is sent so pushed to list
+          // so that when the receiver conencted, it will receive it
+          await client.lPush(
+            "pending_messages",
+            JSON.stringify({
+              id: resultMessage.id,
+              message: resultMessage.message,
+              status: resultMessage.message_status,
+              createdAt: resultMessage.createdAt,
+            }),
+          );
+
+          // assuming that the sender is connected for now, and it should be
+          return this._io.to(senderId).emit("message_receive", {
+            status: resultMessage.message_status,
+            message: resultMessage.message,
+            createdAt: resultMessage.createdAt,
+          });
+        }
       });
     });
   }
