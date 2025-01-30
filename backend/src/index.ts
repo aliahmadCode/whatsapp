@@ -11,12 +11,18 @@ import { Server } from "socket.io";
 import { createServer } from "node:http";
 import cors from "cors";
 import { SocketManager } from "./sockets/SocketManager.js";
+import { createClient } from "redis";
 
 export const app = express();
 const server = createServer(app);
 const socket = new SocketManager();
+
 socket.io.attach(server);
 socket.initialize();
+
+const client = await createClient().on("error", (err) => {
+  console.log("Can't connect to redis: ", err);
+});
 
 export const PORT: string | number = process.env.PORT || 3000;
 export const SECRET_KEY: string = process.env.SECRET
@@ -46,21 +52,36 @@ app.get("/programmer", (req: Request, res: Response) => {
   });
 });
 
+// get GET
+// send POST
+// delete DELETE
 app.use("/api/message/", messageRouter);
+
+// get GET
+// get/:id GET
+// delete DELETE
+// delete/:id DELETE
+// add POST
+// * edit/:id PATCH
 app.use("/api/user/", userRouter);
 
-dbConnect()
-  .then(() => {
-    server.listen(PORT, () => {
-      console.log(`db connected\nListening on the port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.log(err);
+// here i am connecting redis, postgres, and then server
+client.connect().then(() => {
+  dbConnect()
+    .then(() => {
+      server.listen(PORT, () => {
+        console.log(
+          `redis connected\ndb connected\nListening on the port ${PORT}`,
+        );
+      });
+    })
+    .catch((err) => {
+      console.log(err);
 
-    socket.io.removeAllListeners();
-    process.exit(1);
-  });
+      socket.io.removeAllListeners();
+      process.exit(1);
+    });
+});
 
 /*
 
