@@ -24,10 +24,31 @@ export const getAllMessage = async (
       });
     }
 
-    return res.status(400).json({
+    return res.status(200).json({
       message: "Message fetched",
       success: true,
       data: messages,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "server error",
+      success: false,
+      error: error,
+    });
+  }
+};
+
+export const deleteAllMessages = async (
+  req: Request,
+  res: Response<NormalResponse>,
+): Promise<any> => {
+  try {
+    const messageRepo = await AppDataSource.getRepository(Message);
+    await messageRepo.clear();
+
+    return res.status(400).json({
+      message: "Messages Deleted",
+      success: true,
     });
   } catch (error) {
     return res.status(500).json({

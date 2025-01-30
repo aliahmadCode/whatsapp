@@ -1,10 +1,11 @@
-import { redirect } from "next/navigation";
+import { ChatApp } from "../components/ChatApp";
 
-export default function Home() {
-    redirect("/login");
-    return (
-        <>
-            <div>the server component</div>
-        </>
-    );
+export default function Page() {
+  return (
+    <>
+      <div>
+        <ChatApp />
+      </div>
+    </>
+  );
 }

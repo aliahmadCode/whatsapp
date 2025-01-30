@@ -10,16 +10,13 @@ dotenv.config(); // environment variables
 import { Server } from "socket.io";
 import { createServer } from "node:http";
 import cors from "cors";
+import { SocketManager } from "./sockets/SocketManager.js";
 
 export const app = express();
 const server = createServer(app);
-
-export const io = new Server({
-  cors: {
-    methods: ["GET", "POST", "PATCH", "DELETE", "PUT"],
-    origin: "http://localhost:5173",
-  },
-});
+const socket = new SocketManager();
+socket.io.attach(server);
+socket.initialize();
 
 export const PORT: string | number = process.env.PORT || 3000;
 export const SECRET_KEY: string = process.env.SECRET
@@ -52,12 +49,6 @@ app.get("/programmer", (req: Request, res: Response) => {
 app.use("/api/message/", messageRouter);
 app.use("/api/user/", userRouter);
 
-io.on("connection", (socket) => {
-  socket.on("connect", (data: { senderid: string }) => {
-    socket.join(data.senderid);
-  });
-});
-
 dbConnect()
   .then(() => {
     server.listen(PORT, () => {
@@ -66,6 +57,8 @@ dbConnect()
   })
   .catch((err) => {
     console.log(err);
+
+    socket.io.removeAllListeners();
     process.exit(1);
   });
 
