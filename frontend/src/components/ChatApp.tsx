@@ -22,7 +22,6 @@ const defaultMessage = {
 export const ChatApp = () => {
   const [message, setMessage] = useState<Message[]>([]);
   const [tempMessage, setTempMessage] = useState<Message>(defaultMessage);
-  console.log("error")
 
   useEffect(() => {
     socket.on("message_error", (msg) => {
