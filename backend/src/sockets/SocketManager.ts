@@ -93,7 +93,6 @@ export class SocketManager {
           status: resultMessage.message_status,
           message: resultMessage.message
         })
-
       });
 
       socket.on("disconnect", () => {
